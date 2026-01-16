@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Name}} - Marian Apparitions</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .meta {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/">&larr; Back to List</a>
+    <h1>{{.Name}}</h1>
+    <div class="meta">
+        <strong>Category:</strong> {{.Category}} <br>
+        <strong>Year(s):</strong> {{.Years}} <br>
+        <strong>Wikipedia Section:</strong> {{.WikipediaSectionTitle}}
+    </div>
+
+    {{if .ImageFilename}}
+    <img src="/static/{{.ImageFilename}}" alt="{{.Name}}">
+    {{end}}
+
+    <p>{{.Description}}</p>
+</body>
+
+</html>

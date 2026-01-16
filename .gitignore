@@ -1,0 +1,16 @@
+# Binaries
+# If you run 'go build', the default binary name matches the module name or directory
+marianapparitions
+# Common output names
+main
+*.exe
+*.test
+
+# SQLite Database
+*.db
+*.db-journal
+*.sqlite
+
+# OS-specific
+.DS_Store
+Thumbs.db
