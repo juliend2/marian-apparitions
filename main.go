@@ -59,12 +59,20 @@ func main() {
 }
 
 func initDB() error {
-	schema, err := os.ReadFile("schema.sql")
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec(string(schema))
-	if err != nil {
+	// Check if table exists
+	var name string
+	err := db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='events'").Scan(&name)
+	if err == sql.ErrNoRows {
+		// Table doesn't exist, create it
+		schema, err := os.ReadFile("schema.sql")
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec(string(schema))
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
