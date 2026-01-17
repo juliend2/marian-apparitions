@@ -253,9 +253,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, viewModel)
 }
 
-func handleView(w http.ResponseWriter, r *http.Request) {
-	slug := strings.TrimPrefix(r.URL.Path, "/")
-
+func GetEventBySlug(slug string) (model.Event, error) {
 	var e model.Event
 	// Query by 'slug' column
 	row := db.QueryRow(
@@ -272,6 +270,19 @@ func handleView(w http.ResponseWriter, r *http.Request) {
 		WHERE slug = ?`, slug)
 
 	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB)
+	if err == sql.ErrNoRows {
+		return e, sql.ErrNoRows
+	} else if err != nil {
+		return e, err
+	}
+
+	return e, nil
+}
+
+func handleView(w http.ResponseWriter, r *http.Request) {
+	slug := strings.TrimPrefix(r.URL.Path, "/")
+
+	e, err := GetEventBySlug(slug)
 	if err == sql.ErrNoRows {
 		http.NotFound(w, r)
 		return
