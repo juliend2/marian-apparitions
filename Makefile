@@ -5,4 +5,4 @@ clean:
 	rm -f data.sqlite3 marianapparitions
 
 build:
-	go build .
+	GOOS=linux GOARCH=amd64 go build -o app main.go

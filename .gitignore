@@ -2,7 +2,7 @@
 # If you run 'go build', the default binary name matches the module name or directory
 marianapparitions
 # Common output names
-main
+app
 *.exe
 *.test
 
