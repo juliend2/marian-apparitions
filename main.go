@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"marianapparitions/model"
+	"marianapparitions/repository"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -253,36 +254,10 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, viewModel)
 }
 
-func GetEventBySlug(slug string) (model.Event, error) {
-	var e model.Event
-	// Query by 'slug' column
-	row := db.QueryRow(
-		`SELECT
-			id,
-			category,
-			name,
-			description,
-			wikipedia_section_title,
-			COALESCE(image_filename, '') AS image_filename,
-			years,
-            COALESCE(slug, '') as slug
-		FROM events
-		WHERE slug = ?`, slug)
-
-	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB)
-	if err == sql.ErrNoRows {
-		return e, sql.ErrNoRows
-	} else if err != nil {
-		return e, err
-	}
-
-	return e, nil
-}
-
 func handleView(w http.ResponseWriter, r *http.Request) {
 	slug := strings.TrimPrefix(r.URL.Path, "/")
 
-	e, err := GetEventBySlug(slug)
+	e, err := repository.GetEventBySlug(db, slug)
 	if err == sql.ErrNoRows {
 		http.NotFound(w, r)
 		return
