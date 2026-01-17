@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"marianapparitions/model"
@@ -69,8 +70,65 @@ func initDB() error {
 		return err
 	}
 
+	// Check for 'slug' column and add if missing
+	var slugCol string
+	err = db.QueryRow("SELECT slug FROM events LIMIT 1").Scan(&slugCol)
+	if err != nil {
+		// Assume column missing (or table empty) - simplistic check, but works for "add column"
+		// If table is empty, this might error, but the seed will run.
+		// Better: check specific error or just try to add and ignore error?
+		// Safest for sqlite: just try to add, if it fails it fails.
+		// BUT better logic: check table info.
+		// Let's just run the ALTER and ignore "duplicate column" error or check properly.
+		// Actually, db.QueryRow returns error if column doesn't exist.
+		if !strings.Contains(err.Error(), "no such column") && err != sql.ErrNoRows {
+			// Real error
+		} else if strings.Contains(err.Error(), "no such column") {
+			_, _ = db.Exec("ALTER TABLE events ADD COLUMN slug TEXT")
+		}
+	}
+
 	if count == 0 {
-		return seedData()
+		if err := seedData(); err != nil {
+			return err
+		}
+	}
+
+	return ensureSlugs()
+}
+
+func ensureSlugs() error {
+	rows, err := db.Query("SELECT id, name FROM events WHERE slug IS NULL OR slug = ''")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var toUpdate []model.Event
+	for rows.Next() {
+		var e model.Event
+		if err := rows.Scan(&e.ID, &e.Name); err != nil {
+			return err
+		}
+		toUpdate = append(toUpdate, e)
+	}
+
+	// We need to use the model's Slug() generation on the fly.
+	// Since e.SlugDB is empty, e.Slug() will run the generation logic.
+	stmt, err := db.Prepare("UPDATE events SET slug = ? WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, e := range toUpdate {
+		newSlug := e.Slug()
+		_, err := stmt.Exec(newSlug, e.ID)
+		if err != nil {
+			log.Printf("Failed to update slug for %s: %v", e.Name, err)
+		} else {
+			log.Printf("Updated slug for event: %s -> %s", e.Name, newSlug)
+		}
 	}
 	return nil
 }
@@ -84,6 +142,14 @@ func seedData() error {
 	return err
 }
 
+type IndexViewModel struct {
+	Events             []*model.Event
+	Categories         []string
+	SelectedCategories map[string]bool
+	StartYear          int
+	EndYear            int
+}
+
 func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		// Assume it's a slug if not root
@@ -91,6 +157,22 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 1. Parse Filters
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	startYear, _ := strconv.Atoi(r.FormValue("start_year"))
+	endYear, _ := strconv.Atoi(r.FormValue("end_year"))
+	selectedCatsSlice := r.Form["category"] // Multi-value
+	selectedCats := make(map[string]bool)
+	for _, c := range selectedCatsSlice {
+		selectedCats[c] = true
+	}
+
+	// 2. Fetch Data (All Events)
+	// We fetch all because complex string parsing for years is easier in Go
 	rows, err := db.Query(
 		`SELECT
 			id,
@@ -99,7 +181,8 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 			description,
 			wikipedia_section_title,
 			COALESCE(image_filename, '') AS image_filename,
-			years
+			years,
+			COALESCE(slug, '') as slug
 		FROM events`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -107,14 +190,58 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var events []model.Event
+	var allEvents []*model.Event
 	for rows.Next() {
 		var e model.Event
-		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years); err != nil {
+		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		events = append(events, e)
+		allEvents = append(allEvents, &e)
+	}
+
+	// 3. Fetch Categories for Dropdown/Checkboxes
+	catRows, err := db.Query("SELECT DISTINCT category FROM events ORDER BY category")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer catRows.Close()
+	var categories []string
+	for catRows.Next() {
+		var c string
+		if err := catRows.Scan(&c); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		categories = append(categories, c)
+	}
+
+	// 4. Apply Filters in Memory
+	var filteredEvents []*model.Event
+	for _, e := range allEvents {
+		// Category Filter
+		if len(selectedCats) > 0 {
+			if !selectedCats[e.Category] {
+				continue
+			}
+		}
+
+		// Year Filter
+		if !e.MatchesYears(startYear, endYear) {
+			continue
+		}
+
+		filteredEvents = append(filteredEvents, e)
+	}
+
+	// 5. Render
+	viewModel := IndexViewModel{
+		Events:             filteredEvents,
+		Categories:         categories,
+		SelectedCategories: selectedCats,
+		StartYear:          startYear,
+		EndYear:            endYear,
 	}
 
 	tmpl, err := template.ParseFiles("templates/index.html")
@@ -122,14 +249,14 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, events)
+	tmpl.Execute(w, viewModel)
 }
 
 func handleView(w http.ResponseWriter, r *http.Request) {
 	slug := strings.TrimPrefix(r.URL.Path, "/")
 
 	var e model.Event
-	// Assuming WikipediaSectionTitle matches the slug in URL
+	// Query by 'slug' column
 	row := db.QueryRow(
 		`SELECT
 			id,
@@ -138,11 +265,12 @@ func handleView(w http.ResponseWriter, r *http.Request) {
 			description,
 			wikipedia_section_title,
 			COALESCE(image_filename, '') AS image_filename,
-			years
+			years,
+            COALESCE(slug, '') as slug
 		FROM events
-		WHERE wikipedia_section_title = ?`, slug)
+		WHERE slug = ?`, slug)
 
-	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years)
+	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB)
 	if err == sql.ErrNoRows {
 		http.NotFound(w, r)
 		return

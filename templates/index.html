@@ -46,16 +46,75 @@
             color: #666;
             font-size: 0.9rem;
         }
+
+        .filters {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            margin-bottom: 10px;
+        }
+
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 
 <body>
     <h1>Marian Apparitions</h1>
+
+    <div class="filters">
+        <form method="GET" action="/">
+            <h3>Filter Events</h3>
+            <div class="filter-group">
+                <label>Year Range:</label>
+                <input type="number" name="start_year" placeholder="Start Year"
+                    value="{{if .StartYear}}{{.StartYear}}{{end}}">
+                -
+                <input type="number" name="end_year" placeholder="End Year" value="{{if .EndYear}}{{.EndYear}}{{end}}">
+            </div>
+
+            <div class="filter-group">
+                <label>Categories:</label>
+                <div class="category-list">
+                    {{range .Categories}}
+                    <label class="category-item">
+                        <input type="checkbox" name="category" value="{{.}}" {{if index $.SelectedCategories
+                            .}}checked{{end}}>
+                        {{.}}
+                    </label>
+                    {{end}}
+                </div>
+            </div>
+
+            <button type="submit">Apply Filters</button>
+            <a href="/">Clear</a>
+        </form>
+    </div>
+
+    <hr>
+
     <ul class="event-list">
-        {{range .}}
+        {{range .Events}}
         <li class="event-item">
             <h2><a href="/{{.Slug}}">{{.Name}}</a></h2>
             <div class="meta">{{.Category}} | {{.Years}}</div>
+        </li>
+        {{else}}
+        <li class="event-item">
+            <p>No events found matching your criteria.</p>
         </li>
         {{end}}
     </ul>
