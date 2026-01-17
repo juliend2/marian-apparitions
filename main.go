@@ -183,7 +183,8 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 			COALESCE(image_filename, '') AS image_filename,
 			years,
 			COALESCE(slug, '') as slug
-		FROM events`)
+		FROM events
+		ORDER BY CAST(years AS INTEGER) DESC`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
