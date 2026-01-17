@@ -1,20 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marian Apparitions</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
-        h1 { color: #333; }
-        .event-list { list-style: none; padding: 0; }
-        .event-item { border-bottom: 1px solid #eee; padding: 15px 0; }
-        .event-item h2 { margin: 0; font-size: 1.25rem; }
-        .event-item a { text-decoration: none; color: #007bff; }
-        .event-item a:hover { text-decoration: underline; }
-        .meta { color: #666; font-size: 0.9rem; }
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .event-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .event-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+
+        .event-item h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .event-item a {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .event-item a:hover {
+            text-decoration: underline;
+        }
+
+        .meta {
+            color: #666;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
+
 <body>
     <h1>Marian Apparitions</h1>
     <ul class="event-list">
@@ -22,9 +56,9 @@
         <li class="event-item">
             <h2><a href="/{{.Slug}}">{{.Name}}</a></h2>
             <div class="meta">{{.Category}} | {{.Years}}</div>
-            <p>{{.Description}}</p>
         </li>
         {{end}}
     </ul>
 </body>
+
 </html>

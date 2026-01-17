@@ -8,24 +8,10 @@ import (
 	"os"
 	"strings"
 
+	"marianapparitions/model"
+
 	_ "github.com/mattn/go-sqlite3"
 )
-
-type Event struct {
-	ID                    int
-	Category              string
-	Name                  string
-	Description           string
-	WikipediaSectionTitle string
-	ImageFilename         string
-	Years                 string
-}
-
-// Slug returns the identifier used in URLs.
-// We use WikipediaSectionTitle as the slug.
-func (e *Event) Slug() string {
-	return e.WikipediaSectionTitle
-}
 
 var db *sql.DB
 
@@ -121,9 +107,9 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var events []Event
+	var events []model.Event
 	for rows.Next() {
-		var e Event
+		var e model.Event
 		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -142,7 +128,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 func handleView(w http.ResponseWriter, r *http.Request) {
 	slug := strings.TrimPrefix(r.URL.Path, "/")
 
-	var e Event
+	var e model.Event
 	// Assuming WikipediaSectionTitle matches the slug in URL
 	row := db.QueryRow(
 		`SELECT
