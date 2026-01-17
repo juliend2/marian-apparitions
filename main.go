@@ -151,6 +151,35 @@ type IndexViewModel struct {
 	EndYear            int
 }
 
+func getAllEvents(db *sql.DB) ([]*model.Event, error) {
+	rows, err := db.Query(
+		`SELECT
+			id,
+			category,
+			name,
+			description,
+			wikipedia_section_title,
+			COALESCE(image_filename, '') AS image_filename,
+			years,
+			COALESCE(slug, '') as slug
+		FROM events
+		ORDER BY CAST(years AS INTEGER) DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var allEvents []*model.Event
+	for rows.Next() {
+		var e model.Event
+		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB); err != nil {
+			return nil, err
+		}
+		allEvents = append(allEvents, &e)
+	}
+	return allEvents, nil
+}
+
 func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		// Assume it's a slug if not root
@@ -174,32 +203,10 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Fetch Data (All Events)
 	// We fetch all because complex string parsing for years is easier in Go
-	rows, err := db.Query(
-		`SELECT
-			id,
-			category,
-			name,
-			description,
-			wikipedia_section_title,
-			COALESCE(image_filename, '') AS image_filename,
-			years,
-			COALESCE(slug, '') as slug
-		FROM events
-		ORDER BY CAST(years AS INTEGER) DESC`)
+	allEvents, err := repository.GetAllEvents(db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-	defer rows.Close()
-
-	var allEvents []*model.Event
-	for rows.Next() {
-		var e model.Event
-		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		allEvents = append(allEvents, &e)
 	}
 
 	// 3. Fetch Categories for Dropdown/Checkboxes
@@ -221,7 +228,8 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 	// 4. Apply Filters in Memory
 	var filteredEvents []*model.Event
-	for _, e := range allEvents {
+	for i := range allEvents {
+		e := &allEvents[i]
 		// Category Filter
 		if len(selectedCats) > 0 {
 			if !selectedCats[e.Category] {
