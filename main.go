@@ -31,7 +31,7 @@ var db *sql.DB
 
 func main() {
 	var err error
-	db, err = sql.Open("sqlite3", "./marian.db")
+	db, err = sql.Open("sqlite3", "./data.sqlite3")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +105,16 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.Query("SELECT id, category, name, description, wikipedia_section_title, image_filename, years FROM events")
+	rows, err := db.Query(
+		`SELECT
+			id,
+			category,
+			name,
+			description,
+			wikipedia_section_title,
+			COALESCE(image_filename, '') AS image_filename,
+			years
+		FROM events`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -135,7 +144,17 @@ func handleView(w http.ResponseWriter, r *http.Request) {
 
 	var e Event
 	// Assuming WikipediaSectionTitle matches the slug in URL
-	row := db.QueryRow("SELECT id, category, name, description, wikipedia_section_title, image_filename, years FROM events WHERE wikipedia_section_title = ?", slug)
+	row := db.QueryRow(
+		`SELECT
+			id,
+			category,
+			name,
+			description,
+			wikipedia_section_title,
+			COALESCE(image_filename, '') AS image_filename,
+			years
+		FROM events
+		WHERE wikipedia_section_title = ?`, slug)
 
 	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years)
 	if err == sql.ErrNoRows {

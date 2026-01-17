@@ -2,4 +2,4 @@ run:
 	go run .
 
 clean:
-	rm -f marian.db marianapparitions
+	rm -f data.sqlite3 marianapparitions
