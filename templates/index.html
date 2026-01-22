@@ -28,7 +28,7 @@
             padding: 15px 0;
         }
 
-        .event-item h2 {
+        .event-item h3 {
             margin: 0;
             font-size: 1.25rem;
         }
@@ -43,7 +43,7 @@
         }
 
         .meta {
-            color: #666;
+            color: #616161;
             font-size: 0.9rem;
         }
 
@@ -69,6 +69,72 @@
             align-items: center;
             gap: 5px;
         }
+
+        /* New sorting section styles */
+
+        details {
+            position: relative;
+            width: 200px;
+            font-family: Arial, sans-serif;
+            }
+
+        summary {
+            padding: 10px 15px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+        }
+
+        summary::-webkit-details-marker {
+            display: none; /* Cacher la flèche par défaut */
+        }
+
+        summary::after {
+            content: '▼';
+            float: right;
+            font-size: 12px;
+        }
+
+        details[open] summary::after {
+            content: '▲';
+        }
+
+        details ul {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin: 2px 0 0 0;
+            padding: 0;
+            list-style: none;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        details ul li {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        details ul li:last-child {
+            border-bottom: none;
+        }
+
+        details ul li:hover {
+            background: #f5f5f5;
+        }
+
+        details ul li a {
+            text-decoration: none;
+            color: #333;
+            display: block;
+        }
     </style>
 </head>
 
@@ -77,7 +143,7 @@
 
     <div class="filters">
         <form method="GET" action="/">
-            <h3>Filter Events</h3>
+            <h2>Filter Events</h2>
             <div class="filter-group">
                 <label>Year Range:</label>
                 <input type="number" name="start_year" placeholder="Start Year"
@@ -104,12 +170,28 @@
         </form>
     </div>
 
+
+    <div class="sorting">
+        <form method="GET" action="/">
+            <h2>Sort Events</h2>
+            <details>
+                <summary>Sélectionner une option</summary>
+                <ul>
+                {{range .SupportedSorts}}
+                    <li><a href="/?sort_by={{.}}">{{.}}</a></li>
+                {{end}}
+                </ul>
+              </details>
+              
+        </form>
+    </div>
+
     <hr>
 
     <ul class="event-list">
         {{range .Events}}
         <li class="event-item">
-            <h2><a href="/{{.Slug}}">{{.Name}}</a></h2>
+            <h3><a href="/{{.Slug}}">{{.Name}}</a></h3>
             <div class="meta">{{.Category}} | {{.Years}}</div>
         </li>
         {{else}}

@@ -5,5 +5,6 @@ CREATE TABLE events (
     description TEXT,
     wikipedia_section_title TEXT,
     image_filename TEXT,
-    years TEXT
+    years TEXT,
+    slug TEXT
 );

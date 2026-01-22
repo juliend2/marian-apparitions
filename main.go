@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -16,6 +17,7 @@ import (
 )
 
 var db *sql.DB
+var SupportedSorts = []string{"name_asc", "name_desc", "year_asc", "year_desc", "category_asc", "category_desc"}
 
 func main() {
 	var err error
@@ -149,35 +151,7 @@ type IndexViewModel struct {
 	SelectedCategories map[string]bool
 	StartYear          int
 	EndYear            int
-}
-
-func getAllEvents(db *sql.DB) ([]*model.Event, error) {
-	rows, err := db.Query(
-		`SELECT
-			id,
-			category,
-			name,
-			description,
-			wikipedia_section_title,
-			COALESCE(image_filename, '') AS image_filename,
-			years,
-			COALESCE(slug, '') as slug
-		FROM events
-		ORDER BY CAST(years AS INTEGER) DESC`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var allEvents []*model.Event
-	for rows.Next() {
-		var e model.Event
-		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB); err != nil {
-			return nil, err
-		}
-		allEvents = append(allEvents, &e)
-	}
-	return allEvents, nil
+	SupportedSorts     []string
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -195,11 +169,14 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 	startYear, _ := strconv.Atoi(r.FormValue("start_year"))
 	endYear, _ := strconv.Atoi(r.FormValue("end_year"))
+	sortBy := r.FormValue("sort_by")
 	selectedCatsSlice := r.Form["category"] // Multi-value
 	selectedCats := make(map[string]bool)
 	for _, c := range selectedCatsSlice {
 		selectedCats[c] = true
 	}
+
+	log.Println("Filters - StartYear:", startYear, "EndYear:", endYear, "SortBy:", sortBy, "Categories:", selectedCatsSlice)
 
 	// 2. Fetch Data (All Events)
 	// We fetch all because complex string parsing for years is easier in Go
@@ -245,13 +222,19 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		filteredEvents = append(filteredEvents, e)
 	}
 
-	// 5. Render
+	// 5. Apply Sorting
+	if sortBy != "" {
+		applySorting(filteredEvents, sortBy)
+	}
+
+	// 6. Render
 	viewModel := IndexViewModel{
 		Events:             filteredEvents,
 		Categories:         categories,
 		SelectedCategories: selectedCats,
 		StartYear:          startYear,
 		EndYear:            endYear,
+		SupportedSorts:     SupportedSorts,
 	}
 
 	tmpl, err := template.ParseFiles("templates/index.html")
@@ -260,6 +243,69 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmpl.Execute(w, viewModel)
+}
+
+func applySorting(events []*model.Event, sortBy string) {
+	// Split sort_by into field and direction (e.g., "name_asc" -> ["name", "asc"])
+	parts := strings.Split(sortBy, "_")
+	if len(parts) != 2 {
+		return // Invalid format, skip sorting
+	}
+
+	field := parts[0]
+	direction := parts[1]
+
+	sort.Slice(events, func(i, j int) bool {
+		var less bool
+
+		switch field {
+		case "name":
+			less = strings.ToLower(events[i].Name) < strings.ToLower(events[j].Name)
+		case "category":
+			less = strings.ToLower(events[i].Category) < strings.ToLower(events[j].Category)
+		case "year":
+			// Extract first year from years string for comparison
+			yearI := extractFirstYear(events[i].Years)
+			yearJ := extractFirstYear(events[j].Years)
+			less = yearI < yearJ
+		default:
+			return false // Unknown field
+		}
+
+		// Reverse if descending
+		if direction == "desc" {
+			return !less
+		}
+		return less
+	})
+}
+
+func extractFirstYear(years string) int {
+	// Normalize dashes
+	normalizedYears := strings.ReplaceAll(years, "–", "-")
+	normalizedYears = strings.ReplaceAll(normalizedYears, "—", "-")
+
+	// Split by comma and take first part
+	parts := strings.Split(normalizedYears, ",")
+	if len(parts) == 0 {
+		return 0
+	}
+
+	firstPart := strings.TrimSpace(parts[0])
+
+	// If it's a range, take the start year
+	if strings.Contains(firstPart, "-") {
+		rangeParts := strings.Split(firstPart, "-")
+		firstPart = strings.TrimSpace(rangeParts[0])
+	}
+
+	// Convert to int
+	year, err := strconv.Atoi(firstPart)
+	if err != nil {
+		return 0
+	}
+
+	return year
 }
 
 func handleView(w http.ResponseWriter, r *http.Request) {
