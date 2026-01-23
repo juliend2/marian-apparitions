@@ -14,6 +14,7 @@
     <div class="filters">
         <form method="GET" action="/">
             <h2>Filter Events</h2>
+            {{if .CurrentSort}}<input type="hidden" name="sort_by" value="{{.CurrentSort}}">{{end}}
             <div class="filter-group">
                 <label>Year Range:</label>
                 <input type="number" name="start_year" placeholder="Start Year"
@@ -40,7 +41,6 @@
         </form>
     </div>
 
-
     <div class="sorting">
         <form method="GET" action="/">
             <h2>Sort Events</h2>
@@ -48,7 +48,9 @@
                 <summary>Sélectionner une option</summary>
                 <ul>
                     {{range .SupportedSorts}}
-                    <li><a href="/?sort_by={{.}}">{{.}}</a></li>
+                    <li><a
+                            href="/?sort_by={{.}}{{if $.FilterQuery}}&{{range $key, $value := $.FilterQuery}}{{$key}}={{$value}}&{{end}}{{end}}">{{.}}</a>
+                    </li>
                     {{end}}
                 </ul>
             </details>

@@ -17,7 +17,14 @@ import (
 )
 
 var db *sql.DB
-var SupportedSorts = []string{"name_asc", "name_desc", "year_asc", "year_desc", "category_asc", "category_desc"}
+var SupportedSorts = []string{
+	"name_asc",
+	"name_desc",
+	"year_asc",
+	"year_desc",
+	"category_asc",
+	"category_desc",
+}
 
 func main() {
 	var err error
@@ -153,6 +160,8 @@ type IndexViewModel struct {
 	StartYear          int
 	EndYear            int
 	SupportedSorts     []string
+	CurrentSort        string
+	FilterQuery        map[string]string
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -236,9 +245,15 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		StartYear:          startYear,
 		EndYear:            endYear,
 		SupportedSorts:     SupportedSorts,
+		CurrentSort:        sortBy,
+		FilterQuery:        buildQueryMap(r.URL.Query()),
 	}
-
-	tmpl, err := template.ParseFiles("templates/index.html")
+	funcMap := template.FuncMap{
+		"safeURL": func(u string) template.URL {
+			return template.URL(u)
+		},
+	}
+	tmpl, err := template.New("index.html").Funcs(funcMap).ParseFiles("templates/index.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
