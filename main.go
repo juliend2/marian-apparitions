@@ -31,6 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", handleIndex)
 	// We handle /<slug> in a catch-all way or specific pattern.
 	// Since handleIndex matches "/", we need to distinguish inside,
