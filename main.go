@@ -28,7 +28,11 @@ var SupportedSorts = []string{
 
 func main() {
 	var err error
-	db, err = sql.Open("sqlite3", "./data.sqlite3")
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "./data.sqlite3"
+	}
+	db, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}

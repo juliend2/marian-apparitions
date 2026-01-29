@@ -1,0 +1,24 @@
+[Unit]
+Description=Mariana Apparitions Web Application (Instance {{ item }})
+After=network.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_dir }}
+Environment="PORT={{ app_base_port + item - 1 }}"
+Environment="DB_PATH={{ app_data_dir }}/data.sqlite3"
+ExecStart={{ app_dir }}/{{ app_binary }}
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ReadWritePaths={{ app_data_dir }}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,187 @@
+---
+- name: Provision Mariana Apparitions server
+  hosts: marianapparitions
+  become: yes
+  vars_files:
+    - vars.yml
+
+  tasks:
+    # Deps
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+          - ufw
+          - sqlite3
+          - cron
+        state: present
+
+    # User and directories
+    - name: Create application user
+      user:
+        name: "{{ app_user }}"
+        system: yes
+        shell: /usr/sbin/nologin
+        home: "{{ app_dir }}"
+        create_home: no
+
+    - name: Create application directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+      loop:
+        - "{{ app_dir }}"
+        - "{{ app_data_dir }}"
+
+    # Application deployment
+    - name: Copy application binary
+      copy:
+        src: ../app
+        dest: "{{ app_dir }}/{{ app_binary }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+      notify: Restart app instances
+
+    - name: Copy application templates directory
+      copy:
+        src: "{{ playbook_dir }}/../templates/"
+        dest: "{{ app_dir }}/templates/"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+      notify: Restart app instances
+
+    - name: Copy application static directory
+      copy:
+        src: "{{ playbook_dir }}/../static/"
+        dest: "{{ app_dir }}/static/"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+      notify: Restart app instances
+
+    - name: Copy schema.sql
+      copy:
+        src: ../schema.sql
+        dest: "{{ app_dir }}/schema.sql"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    - name: Copy data.sqlite3 to data directory
+      copy:
+        src: ../data.sqlite3
+        dest: "{{ app_data_dir }}/data.sqlite3"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    - name: Create systemd service files for app instances
+      template:
+        src: templates/marianapparitions.service.j2
+        dest: "/etc/systemd/system/{{ app_name }}-{{ item }}.service"
+        mode: '0644'
+      loop: "{{ range(1, app_instances + 1) | list }}"
+      notify: Restart app instances
+
+    # Systemd for app instances
+    - name: Enable and start app instances
+      systemd:
+        name: "{{ app_name }}-{{ item }}.service"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      loop: "{{ range(1, app_instances + 1) | list }}"
+
+    # Nginx configuration
+    - name: Configure nginx
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/{{ app_name }}
+        mode: '0644'
+      notify: Reload nginx
+
+    - name: Enable nginx site
+      file:
+        src: /etc/nginx/sites-available/{{ app_name }}
+        dest: /etc/nginx/sites-enabled/{{ app_name }}
+        state: link
+      notify: Reload nginx
+
+    - name: Remove default nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
+
+    # UFW configuration
+    - name: Configure UFW - Allow SSH
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Configure UFW - Allow HTTP
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+
+    - name: Configure UFW - Allow HTTPS
+      ufw:
+        rule: allow
+        port: '443'
+        proto: tcp
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Ensure nginx is started
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+    # Let's Encrypt SSL
+    - name: Obtain Let's Encrypt certificate
+      command: >
+        certbot --nginx
+        -d {{ domain_name }}
+        --non-interactive
+        --agree-tos
+        --email {{ letsencrypt_email }}
+        --redirect
+      args:
+        creates: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
+      notify: Reload nginx
+
+    - name: Set up certbot renewal cron job
+      cron:
+        name: "Renew Let's Encrypt certificates"
+        minute: "0"
+        hour: "3"
+        job: "certbot renew --quiet --post-hook 'systemctl reload nginx'"
+
+  handlers:
+    - name: Restart app instances
+      systemd:
+        name: "{{ app_name }}-{{ item }}.service"
+        state: restarted
+        daemon_reload: yes
+      loop: "{{ range(1, app_instances + 1) | list }}"
+
+    - name: Reload nginx
+      systemd:
+        name: nginx
+        state: reloaded

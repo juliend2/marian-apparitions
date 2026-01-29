@@ -1,0 +1,31 @@
+upstream {{ app_name }}_backend {
+    # Round-robin load balancing (default)
+{% for i in range(1, app_instances + 1) %}
+    server 127.0.0.1:{{ app_base_port + i - 1 }};
+{% endfor %}
+}
+
+server {
+    listen 80;
+    server_name {{ domain_name }};
+
+    # Let's Encrypt will upgrade this to HTTPS
+    location / {
+        proxy_pass http://{{ app_name }}_backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Health check endpoint (optional)
+    location /health {
+        access_log off;
+        proxy_pass http://{{ app_name }}_backend;
+    }
+}

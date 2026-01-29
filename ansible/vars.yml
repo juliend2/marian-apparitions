@@ -1,0 +1,19 @@
+# Application configuration
+app_name: marianapparitions
+app_user: marianapparitions
+app_group: marianapparitions
+app_dir: /opt/marianapparitions
+app_binary: app
+app_instances: 3
+app_base_port: 8081  # Will create instances on 8081, 8082, 8083
+
+# Domain configuration
+domain_name: apparitions.desrosiers.org
+letsencrypt_email: julien@desrosiers.org
+
+# Nginx configuration
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+
+# System configuration
+app_data_dir: /var/lib/marianapparitions

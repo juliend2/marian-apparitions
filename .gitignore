@@ -15,3 +15,10 @@ app
 # OS-specific
 .DS_Store
 Thumbs.db
+
+# Ansible
+ansible/inventory.ini
+ansible/*.retry
+ansible/.vault_pass
+ansible/group_vars/*/vault.yml
+ansible/host_vars/*/vault.yml
