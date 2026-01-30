@@ -24,6 +24,7 @@
     <pre style="white-space: pre-wrap;">{{.Description}}</pre>
  
     <div class="meta">
+      {{if .Requests}}
         <strong>Requests:</strong>
         <ul>
           {{range .Requests}}
@@ -32,6 +33,7 @@
           </li>
           {{end}}
         </ul>
+      {{end}}
     </div>
 </body>
 
