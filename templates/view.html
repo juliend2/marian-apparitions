@@ -14,6 +14,16 @@
     <div class="meta">
         <strong>Category:</strong> {{.Category}} <br>
         <strong>Year(s):</strong> {{.Years}} <br>
+        {{if .Requests}}
+          <strong>Her requests:</strong>
+          <ul>
+            {{range .Requests}}
+            <li>
+              {{.Request}}
+            </li>
+            {{end}}
+          </ul>
+        {{end}}
     </div>
 
     {{if .ImageFilename}}
@@ -22,18 +32,6 @@
 
     <pre style="white-space: pre-wrap;">{{.Description}}</pre>
  
-    <div class="meta">
-      {{if .Requests}}
-        <strong>Requests:</strong>
-        <ul>
-          {{range .Requests}}
-          <li>
-            {{.Request}}
-          </li>
-          {{end}}
-        </ul>
-      {{end}}
-    </div>
 </body>
 
 </html>

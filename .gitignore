@@ -1,3 +1,6 @@
+# Env
+.env
+
 # Binaries
 # If you run 'go build', the default binary name matches the module name or directory
 marianapparitions
