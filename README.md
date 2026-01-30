@@ -2,8 +2,9 @@
 
 ## TODO
 
-- [ ] Make sort and filter coexist
-    - [ ] Make sure we can't add sort_by more than once
+- [ ] Add a JOIN with marys_requests for display in the view.html
+- [x] Make sort and filter coexist
+    - [x] Make sure we can't add sort_by more than once
 - [ ] validate that the /static/ routes are secure and that you can't access files outside of the static directory
 - [ ] validate that the query parameters are sanitized to prevent XSS attacks
 - [ ] Add links to youtube videos for each apparition

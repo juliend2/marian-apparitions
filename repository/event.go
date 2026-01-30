@@ -5,29 +5,52 @@ import (
 	"marianapparitions/model"
 )
 
+func GetRequestsByEventID(db *sql.DB, eventID int) ([]model.Request, error) {
+	var requests []model.Request
+	rows, err := db.Query(
+		`SELECT
+			id,
+			event_id,
+			request
+		FROM marys_requests
+		WHERE event_id = ?`, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var r model.Request
+		if err := rows.Scan(&r.ID, &r.EventID, &r.Request); err != nil {
+			return nil, err
+		}
+		requests = append(requests, r)
+	}
+	return requests, nil
+}
+
 func GetEventBySlug(db *sql.DB, slug string) (model.Event, error) {
 	var e model.Event
 	// Query by 'slug' column
 	row := db.QueryRow(
 		`SELECT
-			id,
-			category,
-			name,
-			description,
-			wikipedia_section_title,
-			COALESCE(image_filename, '') AS image_filename,
-			years,
-            COALESCE(slug, '') as slug
-		FROM events
-		WHERE slug = ?`, slug)
+			e.id,
+			e.category,
+			e.name,
+			e.description,
+			e.wikipedia_section_title,
+			COALESCE(e.image_filename, '') AS image_filename,
+			e.years,
+            COALESCE(e.slug, '') as slug
+		FROM events AS e
+		WHERE e.slug = ?`, slug)
 
 	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB)
-	if err == sql.ErrNoRows {
-		return e, sql.ErrNoRows
-	} else if err != nil {
+	if err != nil {
 		return e, err
 	}
 
+	e.Requests, _ = GetRequestsByEventID(db, e.ID)
 	return e, nil
 }
 

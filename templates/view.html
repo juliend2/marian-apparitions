@@ -22,6 +22,12 @@
     {{end}}
 
     <pre style="white-space: pre-wrap;">{{.Description}}</pre>
+    <div class="meta">
+        <strong>Requests:</strong>
+        {{range .Requests}}
+        {{.Request}} <br>
+        {{end}}
+    </div>
 </body>
 
 </html>
