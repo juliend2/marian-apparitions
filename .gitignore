@@ -25,3 +25,8 @@ ansible/*.retry
 ansible/.vault_pass
 ansible/group_vars/*/vault.yml
 ansible/host_vars/*/vault.yml
+
+# Python
+__pycache__/
+*.pyc
+data_management/mariadmin/mariadmin/.env
