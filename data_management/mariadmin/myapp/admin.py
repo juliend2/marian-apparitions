@@ -21,8 +21,24 @@ class EventBlockInline(SortableInlineAdminMixin, admin.TabularInline):
     ordering = ['ordering']
 
 
+class EventsForm(forms.ModelForm):
+    class Meta:
+        model = Events
+        fields = '__all__'
+        widgets = {
+            'category': forms.TextInput(attrs={'style': 'width: 100%;'}),
+            'name': forms.TextInput(attrs={'style': 'width: 100%;'}),
+            'description': forms.Textarea(attrs={'style': 'width: 100%; height: 300px;', 'rows': 4}),
+            'wikipedia_section_title': forms.TextInput(attrs={'style': 'width: 100%;'}),
+            'image_filename': forms.TextInput(attrs={'style': 'width: 100%;'}),
+            'years': forms.TextInput(attrs={'style': 'width: 100%;'}),
+            'slug': forms.TextInput(attrs={'style': 'width: 100%;'}),
+        }
+
+
 @admin.register(Events)
 class EventsAdmin(SortableAdminBase, admin.ModelAdmin):
+    form = EventsForm
     list_display = ['name', 'category', 'years', 'block_count']
     search_fields = ['name', 'description']
     list_filter = ['category', 'years']
