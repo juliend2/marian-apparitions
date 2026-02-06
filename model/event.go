@@ -21,6 +21,7 @@ type Event struct {
 	Years                 string
 	SlugDB                string // Maps to 'slug' column
 	Requests              []Request
+	Blocks                []EventBlock
 }
 
 // Slug returns the identifier used in URLs.

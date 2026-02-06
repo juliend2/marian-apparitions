@@ -26,11 +26,16 @@
         {{end}}
     </div>
 
-    {{if .ImageFilename}}
+    {{ if .ImageFilename}}
     <img src="/static/{{.ImageFilename}}" alt="{{.Name}}">
-    {{end}}
+    {{ end }}
 
-    <pre style="white-space: pre-wrap;">{{.Description}}</pre>
+    {{ range .Blocks}}
+      {{ if ne .Title "Excerpt" }}
+        <h2>{{.Title}}</h2>
+        <pre style="white-space: pre-wrap;">{{.Content}}</pre>
+      {{ end }}
+    {{ end }}
  
 </body>
 

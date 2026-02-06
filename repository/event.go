@@ -26,7 +26,37 @@ func GetRequestsByEventID(db *sql.DB, eventID int) ([]model.Request, error) {
 		}
 		requests = append(requests, r)
 	}
+
 	return requests, nil
+}
+
+func GetBlocksByEventID(db *sql.DB, eventID int) ([]model.EventBlock, error) {
+	var blocks []model.EventBlock
+	rows, err := db.Query(
+		`SELECT
+			id,
+			title,
+			content,
+			event_id,
+			ordering
+		FROM event_blocks
+		WHERE event_id = ?
+		ORDER BY ordering`, eventID)
+
+	if err != nil {
+		return blocks, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var r model.EventBlock
+		if err := rows.Scan(&r.ID, &r.Title, &r.Content, &r.EventID, &r.Ordering); err != nil {
+			return nil, err
+		}
+		blocks = append(blocks, r)
+	}
+
+	return blocks, nil
 }
 
 func GetEventBySlug(db *sql.DB, slug string) (model.Event, error) {
@@ -37,7 +67,6 @@ func GetEventBySlug(db *sql.DB, slug string) (model.Event, error) {
 			e.id,
 			e.category,
 			e.name,
-			e.description,
 			e.wikipedia_section_title,
 			COALESCE(e.image_filename, '') AS image_filename,
 			e.years,
@@ -45,12 +74,14 @@ func GetEventBySlug(db *sql.DB, slug string) (model.Event, error) {
 		FROM events AS e
 		WHERE e.slug = ?`, slug)
 
-	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB)
+	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB)
 	if err != nil {
 		return e, err
 	}
 
 	e.Requests, _ = GetRequestsByEventID(db, e.ID)
+	e.Blocks, _ = GetBlocksByEventID(db, e.ID)
+
 	return e, nil
 }
 
@@ -78,6 +109,7 @@ func GetAllEvents(db *sql.DB) ([]model.Event, error) {
 		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB); err != nil {
 			return nil, err
 		}
+		e.Blocks, _ = GetBlocksByEventID(db, e.ID)
 		events = append(events, e)
 	}
 	return events, nil

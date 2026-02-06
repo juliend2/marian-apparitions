@@ -77,6 +77,8 @@ func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Specific to the index:
+
 	// 1. Parse Filters
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
