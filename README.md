@@ -5,8 +5,8 @@
 - [ ] Better data
     - [ ] (Maybe have some CRUD app to do all this)
     - [ ] Remove useless Wikipedia-specific sections such as "References", "See also", "Press coverage", "Gallery"
-    - [ ] Divide sections
-    - [ ] Have each section be stored into another table, with: id, event_id, language_id, sorting, title, content
+    - [x] Divide sections
+    - [x] Have each section be stored into another table, with: id, event_id, language_id, sorting, title, content
     - [x] Group similar section titles to have some coherence across all Events
     - [ ] Categorize the requests into things like: "prayer", "penance", "construct a sacred building"
 

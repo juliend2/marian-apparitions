@@ -17,3 +17,8 @@ deploy:
 .PHONY: admin
 admin:
 	cd data_management/mariadmin/ && UV_ENV_FILE=mariadmin/.env uv run python manage.py runserver
+
+.PHONY: shell
+shell:
+	cd data_management/mariadmin/ && UV_ENV_FILE=mariadmin/.env uv run python manage.py shell
+
