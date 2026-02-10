@@ -48,8 +48,9 @@
                 <summary>Sélectionner une option</summary>
                 <ul>
                     {{range .SupportedSorts}}
-                    <li><a
-                            href="/?sort_by={{.}}{{if $.FilterQuery}}&{{range $key, $value := $.FilterQuery}}{{$key}}={{$value}}&{{end}}{{end}}">{{.}}</a>
+                    <li><a href="/?{{- range $qs := $.SortHref . }}
+                                     {{- $qs.Key }}={{- $qs.Value }}&
+                                   {{- end }}">{{.Name}}</a>
                     </li>
                     {{end}}
                 </ul>

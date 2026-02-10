@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"html/template"
 	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,13 +17,21 @@ import (
 )
 
 var db *sql.DB
-var SupportedSorts = []string{
-	"name_asc",
-	"name_desc",
-	"year_asc",
-	"year_desc",
-	"category_asc",
-	"category_desc",
+
+type SupportedSort struct {
+	Name string
+	Orientation string
+	Slug string
+}
+
+
+var SupportedSorts = []SupportedSort{
+	{Name: "Name", Slug: "name_asc", Orientation: "asc"},
+	{Name: "Name", Slug: "name_desc", Orientation: "desc"},
+	{Name: "Year", Slug: "year_asc", Orientation: "asc"},
+	{Name: "Year", Slug: "year_desc", Orientation: "desc"},
+	{Name: "Category", Slug: "category_asc", Orientation: "asc"},
+	{Name: "Category", Slug: "category_desc", Orientation: "desc"},
 }
 
 func main() {
@@ -59,16 +68,39 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
+type QueryString struct {
+	Key string
+	Value string
+}
+
 type IndexViewModel struct {
 	Events             []*model.Event
 	Categories         []string
 	SelectedCategories map[string]bool
 	StartYear          int
 	EndYear            int
-	SupportedSorts     []string
+	SupportedSorts     []SupportedSort
 	CurrentSort        string
 	FilterQuery        map[string]string
 }
+
+func (vm *IndexViewModel) SortHref(sort SupportedSort) []*QueryString {
+	fmt.Printf("SortHref %o \n", sort)
+	var query []*QueryString
+	if len(vm.FilterQuery) > 0 {
+		fmt.Printf("FilterQuery %s \n", vm.FilterQuery)
+		for key, value := range vm.FilterQuery {
+			fmt.Printf("key: %s , value: %s \n", key, value)
+			if key != "sort_by" {
+				query = append(query, &QueryString{Key: key, Value: value})
+			}
+		}
+	}
+	query = append(query, &QueryString{Key: "sort_by", Value: sort.Slug})
+
+	return query
+}
+
 
 func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -146,7 +178,7 @@ func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 6. Render
-	viewModel := IndexViewModel{
+	viewModel := &IndexViewModel{
 		Events:             filteredEvents,
 		Categories:         categories,
 		SelectedCategories: selectedCats,
