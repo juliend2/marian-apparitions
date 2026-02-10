@@ -48,7 +48,7 @@
                 <summary>Sélectionner une option</summary>
                 <ul>
                     {{range .SupportedSorts}}
-                    <li><a href="/?{{- range $qs := $.SortHref . }}
+                    <li class="{{ .Orientation }}"><a href="/?{{- range $qs := $.SortHref . }}
                                      {{- $qs.Key }}={{- $qs.Value }}&
                                    {{- end }}">{{.Name}}</a>
                     </li>
