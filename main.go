@@ -88,9 +88,7 @@ func (vm *IndexViewModel) SortHref(sort SupportedSort) []*QueryString {
 	fmt.Printf("SortHref %o \n", sort)
 	var query []*QueryString
 	if len(vm.FilterQuery) > 0 {
-		fmt.Printf("FilterQuery %s \n", vm.FilterQuery)
 		for key, value := range vm.FilterQuery {
-			fmt.Printf("key: %s , value: %s \n", key, value)
 			if key != "sort_by" {
 				query = append(query, &QueryString{Key: key, Value: value})
 			}

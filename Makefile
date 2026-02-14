@@ -11,7 +11,7 @@ build:
 	GOOS=linux GOARCH=amd64 go build -o app query_helper.go init_db.go sorting.go main.go
 
 .PHONY: deploy
-deploy:
+deploy: build
 	cd ansible && ansible-playbook -i inventory.ini provision.yml
 
 .PHONY: admin
@@ -22,3 +22,6 @@ admin:
 shell:
 	cd data_management/mariadmin/ && UV_ENV_FILE=mariadmin/.env uv run python manage.py shell
 
+.PHONY: journal
+journal:
+	journalctl -f -u marianapparitions-*.service
