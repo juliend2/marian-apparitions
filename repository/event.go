@@ -70,7 +70,7 @@ func GetEventBySlug(db *sql.DB, slug string) (model.Event, error) {
 			e.wikipedia_section_title,
 			COALESCE(e.image_filename, '') AS image_filename,
 			e.years,
-            COALESCE(e.slug, '') as slug
+			COALESCE(e.slug, '') as slug
 		FROM events AS e
 		WHERE e.slug = ?`, slug)
 

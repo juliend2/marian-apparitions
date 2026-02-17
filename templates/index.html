@@ -45,7 +45,7 @@
         <form method="GET" action="/">
             <h2>Sort Events</h2>
             <details>
-                <summary>Sélectionner une option</summary>
+                <summary>Sort by {{ .GetSortNameByString .CurrentSort }} </summary>
                 <ul>
                     {{range .SupportedSorts}}
                     <li class="{{ .Orientation }}"><a href="/?{{- range $qs := $.SortHref . }}

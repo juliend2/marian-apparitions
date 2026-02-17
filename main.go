@@ -24,7 +24,6 @@ type SupportedSort struct {
 	Slug string
 }
 
-
 var SupportedSorts = []SupportedSort{
 	{Name: "Name", Slug: "name_asc", Orientation: "asc"},
 	{Name: "Name", Slug: "name_desc", Orientation: "desc"},
@@ -84,6 +83,9 @@ type IndexViewModel struct {
 	FilterQuery        map[string]string
 }
 
+// SortHref generates a slice of QueryString's
+// It also makes sure you won't get a duplicate sort_by key
+// if one was passed in the current querystring (through vm.FilterQuery).
 func (vm *IndexViewModel) SortHref(sort SupportedSort) []*QueryString {
 	fmt.Printf("SortHref %o \n", sort)
 	var query []*QueryString
@@ -99,6 +101,16 @@ func (vm *IndexViewModel) SortHref(sort SupportedSort) []*QueryString {
 	return query
 }
 
+// GetSortNameByString return the string of the passed sort's name
+// The filtering is based on the SupportedSort's Slug field.
+func (vm *IndexViewModel) GetSortNameByString(sort string) string {
+	for _, sSort := range vm.SupportedSorts {
+		if sSort.Slug == sort {
+			return sSort.Name
+		}
+	}
+	return ""
+}
 
 func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -118,6 +130,9 @@ func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 	startYear, _ := strconv.Atoi(r.FormValue("start_year"))
 	endYear, _ := strconv.Atoi(r.FormValue("end_year"))
 	sortBy := r.FormValue("sort_by")
+	if sortBy == "" {
+		sortBy = "year_desc" // Default sort (see repository.GetAllEvents()'s SQL query)
+	}
 	selectedCatsSlice := r.Form["category"] // Multi-value
 	selectedCats := make(map[string]bool)
 	for _, c := range selectedCatsSlice {
