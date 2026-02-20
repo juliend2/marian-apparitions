@@ -4,27 +4,20 @@ import (
 	"database/sql"
 	"html/template"
 	"log"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 
-	"marianapparitions/model"
 	"marianapparitions/repository"
+	"marianapparitions/viewmodel"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var db *sql.DB
 
-type SupportedSort struct {
-	Name string
-	Orientation string
-	Slug string
-}
-
-var SupportedSorts = []SupportedSort{
+var SupportedSorts = []viewmodel.SupportedSort{
 	{Name: "Name", Slug: "name_asc", Orientation: "asc"},
 	{Name: "Name", Slug: "name_desc", Orientation: "desc"},
 	{Name: "Year", Slug: "year_asc", Orientation: "asc"},
@@ -67,50 +60,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-type QueryString struct {
-	Key string
-	Value string
-}
-
-type IndexViewModel struct {
-	Events             []*model.Event
-	Categories         []string
-	SelectedCategories map[string]bool
-	StartYear          int
-	EndYear            int
-	SupportedSorts     []SupportedSort
-	CurrentSort        string
-	FilterQuery        map[string]string
-}
-
-// SortHref generates a slice of QueryString's
-// It also makes sure you won't get a duplicate sort_by key
-// if one was passed in the current querystring (through vm.FilterQuery).
-func (vm *IndexViewModel) SortHref(sort SupportedSort) []*QueryString {
-	fmt.Printf("SortHref %o \n", sort)
-	var query []*QueryString
-	if len(vm.FilterQuery) > 0 {
-		for key, value := range vm.FilterQuery {
-			if key != "sort_by" {
-				query = append(query, &QueryString{Key: key, Value: value})
-			}
-		}
-	}
-	query = append(query, &QueryString{Key: "sort_by", Value: sort.Slug})
-
-	return query
-}
-
-// GetSortNameByString return the string of the passed sort's name
-// The filtering is based on the SupportedSort's Slug field.
-func (vm *IndexViewModel) GetSortNameByString(sort string) string {
-	for _, sSort := range vm.SupportedSorts {
-		if sSort.Slug == sort {
-			return sSort.Name
-		}
-	}
-	return ""
-}
 
 func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -167,7 +116,7 @@ func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. Apply Filters in Memory
-	var filteredEvents []*model.Event
+	var filteredEvents []*viewmodel.EventViewModel
 	for i := range allEvents {
 		e := &allEvents[i]
 		// Category Filter
@@ -182,16 +131,16 @@ func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		filteredEvents = append(filteredEvents, e)
+		filteredEvents = append(filteredEvents, viewmodel.NewEventVM(e))
 	}
 
 	// 5. Apply Sorting
 	if sortBy != "" {
-		applySorting(filteredEvents, sortBy)
+		applySorting[*viewmodel.EventViewModel](filteredEvents, sortBy)
 	}
 
 	// 6. Render
-	viewModel := &IndexViewModel{
+	viewModel := &viewmodel.IndexViewModel{
 		Events:             filteredEvents,
 		Categories:         categories,
 		SelectedCategories: selectedCats,

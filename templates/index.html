@@ -63,12 +63,18 @@
 
     <ul class="event-list">
         {{range .Events}}
+        {{ $event := . }}
         <li class="event-item">
             <h3><a href="/{{.Slug}}">{{.Name}}</a></h3>
             <div class="meta">{{.Category}} | {{.Years}}</div>
 
             {{ range .Blocks}}
                 {{ if eq .Title "Excerpt" }}
+                {{ if $event.IsChurchApproved "Catholic Church" }}
+                  🇻🇦
+                {{ end }}
+            ☦️
+            ✝️
                     <pre style="white-space: pre-wrap;">{{.Content}}</pre>
                 {{ end }}
             {{ end }}

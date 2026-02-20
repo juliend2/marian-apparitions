@@ -1,13 +1,18 @@
 package main
 
 import (
-	"marianapparitions/model"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-func applySorting(events []*model.Event, sortBy string) {
+type Sortable interface {
+	GetName() string
+	GetCategory() string
+	GetYears() string
+}
+
+func applySorting[T Sortable](events []T, sortBy string) {
 	// Split sort_by into field and direction (e.g., "name_asc" -> ["name", "asc"])
 	parts := strings.Split(sortBy, "_")
 	if len(parts) != 2 {
@@ -22,13 +27,13 @@ func applySorting(events []*model.Event, sortBy string) {
 
 		switch field {
 		case "name":
-			less = strings.ToLower(events[i].Name) < strings.ToLower(events[j].Name)
+			less = strings.ToLower(events[i].GetName()) < strings.ToLower(events[j].GetName())
 		case "category":
-			less = strings.ToLower(events[i].Category) < strings.ToLower(events[j].Category)
+			less = strings.ToLower(events[i].GetCategory()) < strings.ToLower(events[j].GetCategory())
 		case "year":
 			// Extract first year from years string for comparison
-			yearI := extractFirstYear(events[i].Years)
-			yearJ := extractFirstYear(events[j].Years)
+			yearI := extractFirstYear(events[i].GetYears())
+			yearJ := extractFirstYear(events[j].GetYears())
 			less = yearI < yearJ
 		default:
 			return false // Unknown field

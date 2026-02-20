@@ -6,4 +6,6 @@ type EventBlock struct {
 	Content  string
 	EventID  int
 	Ordering int
+	ChurchAuthority string
+	AuthorityPosition string
 }

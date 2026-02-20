@@ -38,7 +38,9 @@ func GetBlocksByEventID(db *sql.DB, eventID int) ([]model.EventBlock, error) {
 			title,
 			content,
 			event_id,
-			ordering
+			ordering,
+			COALESCE(church_authority, ''),
+			COALESCE(authority_position, '')
 		FROM event_blocks
 		WHERE event_id = ?
 		ORDER BY ordering`, eventID)
@@ -50,7 +52,7 @@ func GetBlocksByEventID(db *sql.DB, eventID int) ([]model.EventBlock, error) {
 
 	for rows.Next() {
 		var r model.EventBlock
-		if err := rows.Scan(&r.ID, &r.Title, &r.Content, &r.EventID, &r.Ordering); err != nil {
+		if err := rows.Scan(&r.ID, &r.Title, &r.Content, &r.EventID, &r.Ordering, &r.ChurchAuthority, &r.AuthorityPosition); err != nil {
 			return nil, err
 		}
 		blocks = append(blocks, r)
@@ -109,7 +111,10 @@ func GetAllEvents(db *sql.DB) ([]model.Event, error) {
 		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB); err != nil {
 			return nil, err
 		}
-		e.Blocks, _ = GetBlocksByEventID(db, e.ID)
+		e.Blocks, err = GetBlocksByEventID(db, e.ID)
+		if err != nil {
+			panic(err)
+		}
 		events = append(events, e)
 	}
 	return events, nil
