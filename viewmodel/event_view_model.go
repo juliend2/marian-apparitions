@@ -20,12 +20,20 @@ func NewEventVM(event *model.Event) *EventViewModel {
 }
 
 // Returns whether the church ("Catholic Church" and so on) approved the event
-func (vm *EventViewModel) IsChurchApproved(churchName string) bool {
+func (vm *EventViewModel) IsChurchApproved(churchNameSubstr string) bool {
 	for _, block := range vm.Event.Blocks {
-		if strings.Contains(block.ChurchAuthority, churchName) && block.AuthorityPosition == "approved" {
+		if strings.Contains(block.ChurchAuthority, churchNameSubstr) && block.AuthorityPosition == "approved" {
 			return true
 		}
 	}
 	return false
 }
 
+func (vm *EventViewModel) GetApproverChurch(churchNameSubstr string) string {
+	for _, block := range vm.Event.Blocks {
+		if strings.Contains(block.ChurchAuthority, churchNameSubstr) && block.AuthorityPosition == "approved" {
+			return block.ChurchAuthority
+		}
+	}
+	return ""
+}

@@ -66,16 +66,22 @@
         {{ $event := . }}
         <li class="event-item">
             <h3><a href="/{{.Slug}}">{{.Name}}</a></h3>
-            <div class="meta">{{.Category}} | {{.Years}}</div>
+            <div class="meta">{{.Category}} by
+                  {{ if $event.IsChurchApproved "Catholic" }}
+                    <span class="approval--catholic">{{ $event.GetApproverChurch "Catholic" }}</span>
+                  {{ end }}
+                  {{ if $event.IsChurchApproved "Orthodox" }}
+                    <span class="approval--orthodox">{{ $event.GetApproverChurch "Orthodox" }}</span>
+                  {{ end }}
+                  {{ if $event.IsChurchApproved "Anglican" }}
+                    <span class="approval--anglican">{{ $event.GetApproverChurch "Anglican" }}</span>
+                  {{ end }}
+              | {{.Years}}</div>
 
-            {{ range .Blocks}}
+            {{ range .Blocks }}
                 {{ if eq .Title "Excerpt" }}
-                {{ if $event.IsChurchApproved "Catholic Church" }}
-                  🇻🇦
-                {{ end }}
-            ☦️
-            ✝️
-                    <pre style="white-space: pre-wrap;">{{.Content}}</pre>
+
+                  <pre style="white-space: pre-wrap;">{{.Content}}</pre>
                 {{ end }}
             {{ end }}
         </li>

@@ -150,12 +150,7 @@ func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 		CurrentSort:        sortBy,
 		FilterQuery:        buildQueryMap(r.URL.Query()),
 	}
-	funcMap := template.FuncMap{
-		"safeURL": func(u string) template.URL {
-			return template.URL(u)
-		},
-	}
-	tmpl, err := template.New("index.html").Funcs(funcMap).ParseFiles("templates/index.html")
+	tmpl, err := template.New("index.html").ParseFiles("templates/index.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

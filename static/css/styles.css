@@ -6,6 +6,34 @@ body {
     line-height: 1.6;
 }
 
+[class*="approval--"]::before {
+  font-family: "Segoe UI", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", sans-serif;
+  padding-right: 3px;
+}
+[class*="approval--"] {
+  padding: 2px 3px;
+  border: 1px solid black;
+  border-radius: 2px;
+}
+.approval--catholic::before {
+  content: '🇻🇦';
+}
+.approval--catholic {
+  border-color: DarkGoldenrod;
+  background: PaleGoldenrod;
+}
+.approval--orthodox::before {
+  content: '☦️';
+}
+.approval--orthodox {
+  border-color: MediumBlue;
+  background: LightSkyBlue;
+}
+
+.approval--anglican::before {
+  content: '🏴󠁧󠁢󠁥󠁮󠁧󠁿';
+}
+
 h1 {
     color: #333;
 }
