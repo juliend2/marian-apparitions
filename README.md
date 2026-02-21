@@ -13,4 +13,4 @@
 - [ ] Add a link to the shrine for each apparition that has one built at the demand of Our Lady
 - [ ] Add images to each apparition
 - [ ] Add links to youtube videos for each apparition
-
+- [ ] Add link on approver Church name, so it becomes a filter (if not already in the URL)
