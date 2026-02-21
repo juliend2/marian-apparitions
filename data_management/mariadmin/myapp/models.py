@@ -15,6 +15,7 @@ class Events(models.Model):
     image_filename = models.TextField(blank=True, null=True)
     years = models.TextField(blank=True, null=True)
     slug = models.TextField(blank=True, null=True)
+    country = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -48,6 +49,8 @@ class EventBlock(models.Model):
     title = models.TextField(blank=True, null=True)
     content = models.TextField(blank=True, null=True)
     ordering = models.IntegerField(default=0)
+    church_authority = models.CharField(max_length=100, blank=True, null=True)
+    authority_position = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

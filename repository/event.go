@@ -72,11 +72,12 @@ func GetEventBySlug(db *sql.DB, slug string) (model.Event, error) {
 			e.wikipedia_section_title,
 			COALESCE(e.image_filename, '') AS image_filename,
 			e.years,
-			COALESCE(e.slug, '') as slug
+			COALESCE(e.slug, '') as slug,
+			COALESCE(e.country, '') as country
 		FROM events AS e
 		WHERE e.slug = ?`, slug)
 
-	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB)
+	err := row.Scan(&e.ID, &e.Category, &e.Name, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB, &e.Country)
 	if err != nil {
 		return e, err
 	}
@@ -98,7 +99,8 @@ func GetAllEvents(db *sql.DB) ([]model.Event, error) {
 			wikipedia_section_title,
 			COALESCE(image_filename, '') AS image_filename,
 			years,
-			COALESCE(slug, '') as slug
+			COALESCE(slug, '') as slug,
+			COALESCE(country, '') as country
 		FROM events
 		ORDER BY CAST(years AS INTEGER) DESC`)
 	if err != nil {
@@ -108,7 +110,7 @@ func GetAllEvents(db *sql.DB) ([]model.Event, error) {
 
 	for rows.Next() {
 		var e model.Event
-		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB); err != nil {
+		if err := rows.Scan(&e.ID, &e.Category, &e.Name, &e.Description, &e.WikipediaSectionTitle, &e.ImageFilename, &e.Years, &e.SlugDB, &e.Country); err != nil {
 			return nil, err
 		}
 		e.Blocks, err = GetBlocksByEventID(db, e.ID)

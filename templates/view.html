@@ -14,6 +14,7 @@
     <div class="meta">
         <strong>Category:</strong> {{.Category}} <br>
         <strong>Year(s):</strong> {{.Years}} <br>
+        {{if .Country}}<strong>Country:</strong> {{.Country}} <br>{{end}}
         {{if .Requests}}
           <strong>Her requests:</strong>
           <ul>

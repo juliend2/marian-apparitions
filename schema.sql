@@ -6,5 +6,6 @@ CREATE TABLE events (
     wikipedia_section_title TEXT,
     image_filename TEXT,
     years TEXT,
-    slug TEXT
+    slug TEXT,
+    country TEXT
 );

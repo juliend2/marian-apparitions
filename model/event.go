@@ -20,6 +20,7 @@ type Event struct {
 	ImageFilename         string
 	Years                 string
 	SlugDB                string // Maps to 'slug' column
+	Country               string
 	Requests              []Request
 	Blocks                []EventBlock
 }

@@ -80,6 +80,7 @@
                   {{ end }}
               |
               {{.Years}}
+              {{if .Country}} | {{.Country}}{{end}}
             </div>
 
             {{ range .Blocks }}

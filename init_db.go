@@ -51,6 +51,13 @@ func initDB() error {
 		}
 	}
 
+	// Check for 'country' column and add if missing
+	var countryCol string
+	err = db.QueryRow("SELECT country FROM events LIMIT 1").Scan(&countryCol)
+	if err != nil && strings.Contains(err.Error(), "no such column") {
+		_, _ = db.Exec("ALTER TABLE events ADD COLUMN country TEXT")
+	}
+
 	if count == 0 {
 		if err := seedData(); err != nil {
 			return err
@@ -97,10 +104,10 @@ func ensureSlugs() error {
 }
 
 func seedData() error {
-	_, err := db.Exec(`INSERT INTO events (category, name, description, wikipedia_section_title, image_filename, years) VALUES 
-	('Apparition', 'Our Lady of Guadalupe', 'A series of five Marian apparitions in December 1531, and the image on a cloak enshrined within the Basilica of Our Lady of Guadalupe in Mexico City.', 'Our_Lady_of_Guadalupe', 'guadalupe.jpg', '1531'),
-	('Apparition', 'Our Lady of Lourdes', 'Apparitions of the Virgin Mary to Saint Bernadette Soubirous in 1858 in the grotto of Massabielle.', 'Our_Lady_of_Lourdes', 'lourdes.jpg', '1858'),
-	('Apparition', 'Our Lady of Fátima', 'Reported apparitions to three shepherd children at the Cova da Iria, in Fátima, Portugal.', 'Our_Lady_of_Fátima', 'fatima.jpg', '1917')
+	_, err := db.Exec(`INSERT INTO events (category, name, description, wikipedia_section_title, image_filename, years, country) VALUES
+	('Apparition', 'Our Lady of Guadalupe', 'A series of five Marian apparitions in December 1531, and the image on a cloak enshrined within the Basilica of Our Lady of Guadalupe in Mexico City.', 'Our_Lady_of_Guadalupe', 'guadalupe.jpg', '1531', 'Mexico'),
+	('Apparition', 'Our Lady of Lourdes', 'Apparitions of the Virgin Mary to Saint Bernadette Soubirous in 1858 in the grotto of Massabielle.', 'Our_Lady_of_Lourdes', 'lourdes.jpg', '1858', 'France'),
+	('Apparition', 'Our Lady of Fátima', 'Reported apparitions to three shepherd children at the Cova da Iria, in Fátima, Portugal.', 'Our_Lady_of_Fátima', 'fatima.jpg', '1917', 'Portugal')
 	`)
 	return err
 }

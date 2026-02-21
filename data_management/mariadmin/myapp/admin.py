@@ -17,7 +17,7 @@ class EventBlockInline(SortableInlineAdminMixin, admin.TabularInline):
     model = EventBlock
     form = EventBlockInlineForm
     extra = 1
-    fields = ['language', 'title', 'content', 'ordering']
+    fields = ['language', 'title', 'content', 'ordering', 'church_authority', 'authority_position']
     ordering = ['ordering']
 
 
@@ -33,13 +33,14 @@ class EventsForm(forms.ModelForm):
             'image_filename': forms.TextInput(attrs={'style': 'width: 100%;'}),
             'years': forms.TextInput(attrs={'style': 'width: 100%;'}),
             'slug': forms.TextInput(attrs={'style': 'width: 100%;'}),
+            'country': forms.TextInput(attrs={'style': 'width: 100%;'}),
         }
 
 
 @admin.register(Events)
 class EventsAdmin(SortableAdminBase, admin.ModelAdmin):
     form = EventsForm
-    list_display = ['name', 'category', 'years', 'block_count']
+    list_display = ['name', 'category', 'years', 'country', 'block_count']
     search_fields = ['name', 'description']
     list_filter = ['category', 'years']
     inlines = [EventBlockInline]
@@ -51,7 +52,7 @@ class EventsAdmin(SortableAdminBase, admin.ModelAdmin):
 
 @admin.register(EventBlock)
 class EventBlockAdmin(admin.ModelAdmin):
-    list_display = ['event', 'language', 'title', 'ordering', 'updated_at']
-    list_filter = ['language', 'event']
+    list_display = ['event', 'language', 'title', 'church_authority', 'authority_position', 'ordering', 'updated_at']
+    list_filter = ['language', 'event', 'church_authority', 'authority_position']
     search_fields = ['title', 'content']
     ordering = ['event', 'ordering']
