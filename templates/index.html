@@ -68,6 +68,7 @@
             <h3><a href="/{{.Slug}}">{{.Name}}</a></h3>
             <div class="meta">
               {{.Category}}
+                {{- if $event.HasAnyApproval }}
                   by
                   {{ with $event.GetApproverChurch "Catholic" }}
                     <span class="approval--catholic">{{ . }}</span>
@@ -78,6 +79,7 @@
                   {{ with $event.GetApproverChurch "Anglican" }}
                     <span class="approval--anglican">{{ . }}</span>
                   {{ end }}
+                {{- end }}
               |
               {{.Years}}
               {{if .Country}} | {{.Country}}{{end}}
