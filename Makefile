@@ -1,6 +1,6 @@
 .PHONY: run
 run:
-	go run .
+	OTEL_EXPORTER_OTLP_INSECURE=true go run .
 
 .PHONY: clean
 clean:
@@ -25,3 +25,7 @@ shell:
 .PHONY: journal
 journal:
 	journalctl -f -u marianapparitions-*.service
+
+.PHONY: docker
+docker:
+	docker compose up

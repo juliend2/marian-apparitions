@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"html/template"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"marianapparitions/viewmodel"
 
 	_ "github.com/mattn/go-sqlite3"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 var db *sql.DB
@@ -27,7 +29,19 @@ var SupportedSorts = []viewmodel.SupportedSort{
 }
 
 func main() {
-	var err error
+	ctx := context.Background()
+
+	shutdown, err := initTelemetry(ctx)
+	if err != nil {
+		log.Printf("Warning: failed to initialize telemetry: %v", err)
+	} else {
+		defer func() {
+			if err := shutdown(ctx); err != nil {
+				log.Printf("Warning: telemetry shutdown error: %v", err)
+			}
+		}()
+	}
+
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
 		dbPath = "./data.sqlite3"
@@ -42,14 +56,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	http.HandleFunc("/", handleIndexOrView)
-	// We handle /<slug> in a catch-all way or specific pattern.
-	// Since handleIndex matches "/", we need to distinguish inside,
-	// or register specific paths. But /<slug> is dynamic at root.
-	// Standard pattern:
-	// "/" -> index (if path is exactly "/")
-	// "/<slug>" -> view
+	mux := http.NewServeMux()
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	mux.HandleFunc("/", handleIndexOrView)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -57,7 +66,7 @@ func main() {
 	}
 
 	log.Printf("Server starting on http://localhost:%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, otelhttp.NewHandler(mux, "marianapparitions")))
 }
 
 
