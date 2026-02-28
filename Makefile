@@ -29,3 +29,7 @@ journal:
 .PHONY: docker
 docker:
 	docker compose up
+
+.PHONY: test
+test:
+	go test
