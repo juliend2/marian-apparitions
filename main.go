@@ -129,10 +129,8 @@ func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 	for i := range allEvents {
 		e := &allEvents[i]
 		// Category Filter
-		if len(selectedCats) > 0 {
-			if !selectedCats[e.Category] {
-				continue
-			}
+		if len(selectedCats) > 0 && !selectedCats[e.Category] {
+			continue
 		}
 
 		// Year Filter
