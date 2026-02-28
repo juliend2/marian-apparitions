@@ -17,6 +17,10 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+const DEFAULT_DB_PATH = "./data.sqlite3"
+const DEFAULT_PORT = "8080"
+const DEFAULT_SORT = "year_desc"
+
 var db *sql.DB
 
 var SupportedSorts = []viewmodel.SupportedSort{
@@ -44,7 +48,7 @@ func main() {
 
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		dbPath = "./data.sqlite3"
+		dbPath = DEFAULT_DB_PATH
 	}
 	db, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -62,7 +66,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = DEFAULT_PORT
 	}
 
 	log.Printf("Server starting on http://localhost:%s", port)
@@ -89,7 +93,7 @@ func handleIndexOrView(w http.ResponseWriter, r *http.Request) {
 	endYear, _ := strconv.Atoi(r.FormValue("end_year"))
 	sortBy := r.FormValue("sort_by")
 	if sortBy == "" {
-		sortBy = "year_desc" // Default sort (see repository.GetAllEvents()'s SQL query)
+		sortBy = DEFAULT_SORT // Default sort (see repository.GetAllEvents()'s SQL query)
 	}
 	selectedCatsSlice := r.Form["category"] // Multi-value
 	selectedCats := make(map[string]bool)
